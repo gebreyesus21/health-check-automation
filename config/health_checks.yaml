@@ -1,0 +1,206 @@
+# Health Check Configuration for Ethio Telecom OSS
+global:
+  timeout: 30
+  retries: 2
+  regions:
+    - "North Circle"
+    - "SSWR" 
+    - "AA"
+    - "Central"
+
+checks:
+  # ============ HUAWEI PLATFORMS ============
+  
+  # NetEco Infrastructure Management
+  - name: "huawei_neteco"
+    type: "application_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # NetEco Master
+      - "10.xx.xx.xx"  # NetEco Secondary
+    params:
+      platform: "huawei_neteco"
+      username: "${NETECO_USER}"
+      password: "${NETECO_PASS}"
+      timeout: 30
+
+  # iMaster Network Management
+  - name: "huawei_imaster"
+    type: "application_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # Fixed iMaster Primary
+      - "10.xx.xx.xx"  # Fixed iMaster Secondary
+    params:
+      platform: "huawei_imaster"
+      username: "${IMASTER_USER}"
+      password: "${IMASTER_PASS}"
+
+  # MAE (Mobile Application Engine) - Core
+  - name: "huawei_mae_core"
+    type: "application_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # Core MAE Primary
+      - "10.xx.xx.xx"  # Core MAE Secondary
+    params:
+      platform: "huawei_mae"
+      username: "${MAE_USER}"
+      password: "${MAE_PASS}"
+
+  # MAE - North Circle Region
+  - name: "huawei_mae_north"
+    type: "application_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # North Circle MAE Primary
+      - "10.xx.xx.xx"  # North Circle MAE Secondary
+    params:
+      platform: "huawei_mae"
+      username: "${MAE_USER}"
+      password: "${MAE_PASS}"
+      region: "north_circle"
+
+  # MAE - SSWR Region
+  - name: "huawei_mae_sswr"
+    type: "application_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # SSWR MAE Primary
+      - "10.xx.xx.xx"  # SSWR MAE Secondary
+    params:
+      platform: "huawei_mae"
+      username: "${MAE_USER}"
+      password: "${MAE_PASS}"
+      region: "sswr"
+
+  # MAE - AA Region
+  - name: "huawei_mae_aa"
+    type: "application_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # AA MAE Primary
+      - "10.xx.xx.xx"  # AA MAE Secondary
+    params:
+      platform: "huawei_mae"
+      username: "${MAE_USER}"
+      password: "${MAE_PASS}"
+      region: "aa"
+
+  # ============ ZTE PLATFORMS ============
+
+  # ElasticNet (PE)
+  - name: "zte_elasticnet"
+    type: "application_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # ElasticNet Controller1
+      - "10.xx.xx.xx"  # ElasticNet Controller2
+      - "10.xx.xx.xx"  # ElasticNet Controller3
+    params:
+      platform: "zte_elasticnet"
+      username: "${ELASTICNET_USER}"
+      password: "${ELASTICNET_PASS}"
+
+  # Zenicone IPRAN
+  - name: "zte_zenicone"
+    type: "application_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # Zenicone Controller1
+      - "10.xx.xx.xx"  # Zenicone Controller2
+      - "10.xx.xx.xx"  # Zenicone Controller3
+    params:
+      platform: "zte_zenicone"
+      username: "${ZENICONE_USER}"
+      password: "${ZENICONE_PASS}"
+
+  # NetNumen
+  - name: "zte_netnumen"
+    type: "application_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # NetNumen M3
+    params:
+      platform: "zte_netnumen"
+      username: "${NETNUMEN_USER}"
+      password: "${NETNUMEN_PASS}"
+
+  # U31
+  - name: "zte_u31"
+    type: "application_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # AG U31
+    params:
+      platform: "zte_u31"
+      username: "${U31_USER}"
+      password: "${U31_PASS}"
+
+  # ============ BMC / HARDWARE CHECKS ============
+
+  # BMC for all infrastructure nodes
+  - name: "bmc_health_check"
+    type: "bmc_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # NetEco IBMC
+      - "10.xx.xx.xx"  # iMaster IBMC
+      - "10.xx.xx.xx"  # MAE BMC
+      - "10.xx.xx.xx"  # ElasticNet iDRAC
+      - "10.xx.xx.xx"  # Zenicone BMC
+    params:
+      username: "${BMC_USER}"
+      password: "${BMC_PASS}"
+      thresholds:
+        temperature_max: 80
+        fan_min: 800
+
+  # ============ STORAGE CHECKS ============
+
+  # Ceph Storage Clusters
+  - name: "ceph_health"
+    type: "storage_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # OA Ceph
+      - "10.xx.xx.xx"  # MW Ceph
+    params:
+      storage_type: "ceph"
+      keyring_path: "/run/secrets/ceph.client.admin.keyring"
+
+  # Disk Arrays
+  - name: "disk_array_health"
+    type: "storage_health"
+    enabled: true
+    targets:
+      - "10.xx.xx.xx"  # Core Disk Array
+      - "10.xx.xx.xx"  # Zenicone Disk Array
+    params:
+      storage_type: "disk_array"
+      snmp_community: "${SNMP_COMMUNITY}"
+
+  # ============ LINUX OS CHECKS ============
+
+  - name: "linux_os_health"
+    type: "linux_health"
+    enabled: true
+    targets:
+      # Core Infrastructure
+      - "10.xx.xx.xx"  # Control-VM
+      - "10.xx.xx.xx"  # OA Controllers
+      - "10.xx.xx.xx"  # MW Controllers
+    params:
+      username: "${MONITORING_USER}"
+      key_path: "/run/secrets/ssh_monitoring_key"
+      checks:
+        - "cpu"
+        - "memory"
+        - "disk"
+        - "load"
+        - "processes"
+      thresholds:
+        cpu_percent: 80
+        memory_percent: 85
+        disk_percent: 85
+        load_avg: 4.0

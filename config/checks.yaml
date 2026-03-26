@@ -1,0 +1,106 @@
+# ============================================
+# Global Settings
+# ============================================
+global:
+  timeout: 30
+  retries: 2
+  parallel_workers: 10
+
+# ============================================
+# Linux OS Checks
+# ============================================
+linux_checks:
+  - name: "core_servers"
+    enabled: true
+    targets:
+      - "10.1.1.10"   # neteco-master
+      - "10.1.1.20"   # imaster-primary
+      - "10.2.1.10"   # mae-north-01
+    checks:
+      - cpu
+      - memory
+      - disk
+      - load
+    thresholds:
+      cpu: 80
+      memory: 85
+      disk: 85
+      load: 4.0
+
+# ============================================
+# Huawei Platform Checks
+# ============================================
+huawei_checks:
+  neteco:
+    enabled: true
+    targets:
+      - name: "neteco-master"
+        ip: "10.1.1.10"
+        role: primary
+      - name: "neteco-secondary"
+        ip: "10.1.1.11"
+        role: secondary
+    health_endpoint: "/api/health"
+    port: 8080
+    
+  imaster:
+    enabled: true
+    targets:
+      - name: "imaster-primary"
+        ip: "10.1.1.20"
+        role: primary
+      - name: "imaster-secondary"
+        ip: "10.1.1.21"
+        role: secondary
+    health_endpoint: "/nbi/v1/health"
+    port: 8443
+    protocol: https
+
+# ============================================
+# ZTE Platform Checks
+# ============================================
+zte_checks:
+  elasticnet:
+    enabled: true
+    targets:
+      - "10.3.1.10"   # controller-1
+      - "10.3.1.11"   # controller-2
+      - "10.3.1.12"   # controller-3
+    health_endpoint: "/elasticnet/health"
+    port: 8080
+
+# ============================================
+# BMC Hardware Checks
+# ============================================
+bmc_checks:
+  enabled: true
+  targets:
+    - ip: "10.1.1.100"
+      name: "neteco-bmc"
+    - ip: "10.1.1.101"
+      name: "imaster-bmc"
+  thresholds:
+    temperature: 80
+    fan_min: 1000
+    voltage_min: 11.5
+    voltage_max: 12.5
+
+# ============================================
+# Storage Checks
+# ============================================
+storage_checks:
+  ceph:
+    enabled: true
+    clusters:
+      - name: "oa-ceph"
+        mon_host: "10.5.1.10"
+      - name: "mw-ceph"
+        mon_host: "10.5.2.10"
+  
+  disk_arrays:
+    enabled: true
+    targets:
+      - ip: "10.6.1.10"
+        name: "core-disk-array"
+      - ip: "10.6.2.10"
+        name: "zenicone-disk-array"

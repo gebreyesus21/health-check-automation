@@ -1,0 +1,94 @@
+# k8s/cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: health-check-automation
+  namespace: monitoring
+spec:
+  schedule: "*/5 * * * *"  # Every 5 minutes
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          serviceAccountName: monitoring-sa
+          containers:
+          - name: health-check
+            image: ethiotelecom/health-check:latest
+            args:
+              - "--config=/app/config/health_checks.yaml"
+              - "--parallel"
+              - "--summary"
+            env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: slack-secrets
+                  key: webhook_url
+            - name: SLACK_CHANNEL
+              value: "#infrastructure-alerts"
+            envFrom:
+            - secretRef:
+                name: platform-credentials  # Contains all usernames/passwords
+            volumeMounts:
+            - name: ssh-keys
+              mountPath: /run/secrets/ssh_keys
+              readOnly: true
+            - name: ceph-keyring
+              mountPath: /run/secrets/ceph
+              readOnly: true
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "200m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+          volumes:
+          - name: ssh-keys
+            secret:
+              secretName: monitoring-ssh-keys
+          - name: ceph-keyring
+            secret:
+              secretName: ceph-keyring
+          - name: config
+            configMap:
+              name: health-check-config
+          restartPolicy: OnFailure
+---
+# Secrets (base64 encoded in actual deployment)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: platform-credentials
+  namespace: monitoring
+type: Opaque
+stringData:
+  NETECO_USER: "monitoring"
+  NETECO_PASS: "your-password"
+  IMASTER_USER: "monitoring"
+  IMASTER_PASS: "your-password"
+  MAE_USER: "monitoring"
+  MAE_PASS: "your-password"
+  BMC_USER: "admin"
+  BMC_PASS: "ipmi-password"
+  MONITORING_USER: "healthcheck"
+  SNMP_COMMUNITY: "readonly"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: health-check-config
+  namespace: monitoring
+data:
+  health_checks.yaml: |
+    # (Your YAML configuration here)
